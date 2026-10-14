@@ -50,7 +50,9 @@ jobs:
 
       - name: Package assets
         working-directory: apps/frappe
-        run: tar -czhf frappe-assets.tar.gz -C ../../sites/assets/frappe dist
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          tar -czhf frappe-$VERSION.tar.gz -C ../../sites/assets/frappe dist
 
       - name: Configure DO Spaces Credentials
         uses: BetaHuhn/do-spaces-action@v2
@@ -59,13 +61,14 @@ jobs:
           access_key: ${{ secrets.DO_SPACES_KEY }}
           secret_key: ${{ secrets.DO_SPACES_SECRET }}
           space_name: ${{ secrets.DO_SPACES_NAME }}
-          source: apps/frappe/frappe-assets.tar.gz
+          source: apps/frappe/frappe-*.tar.gz
 
       - name: Upload to rolling release
         working-directory: apps/frappe
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          VERSION="${GITHUB_REF_NAME#v}"
           TAG="assets-${GITHUB_REF_NAME//\//-}"
           gh release create "$TAG" --prerelease --title "Assets: $GITHUB_REF_NAME" --notes "" 2>/dev/null || true
-          gh release upload "$TAG" frappe-assets.tar.gz --clobber
+          gh release upload "$TAG" frappe-$VERSION.tar.gz --clobber
