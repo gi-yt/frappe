@@ -51,20 +51,17 @@ jobs:
       - name: Package assets
         working-directory: apps/frappe
         run: tar -czhf frappe-assets.tar.gz -C ../../sites/assets/frappe dist
-        
-      - name: Configure DO Spaces Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: us-east-1 # Dummy region required by AWS action, DO uses endpoint-url instead
-          aws-access-key-id: ${{ secrets.DO_SPACES_KEY }}
-          aws-secret-access-key: ${{ secrets.DO_SPACES_SECRET }}
 
-      - name: Upload to DigitalOcean Spaces
+      - name: Configure DO Spaces Credentials
+        uses: BetaHuhn/do-spaces-action@v2
         working-directory: apps/frappe
-        run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          aws s3 cp frappe-assets.tar.gz s3://${{ secrets.DO_SPACES_NAME }}/assets/frappe-$VERSION.tar.gz \
-            --endpoint=https://sgp1.digitaloceanspaces.com
+        with:
+          space_region: sgp1 # Dummy region required by AWS action, DO uses endpoint-url instead
+          access_key: ${{ secrets.DO_SPACES_KEY }}
+          secret_key: ${{ secrets.DO_SPACES_SECRET }}
+          space_name: ${{ secrets.DO_SPACES_NAME }}
+          source: frappe-assets.tar.gz
+
       - name: Upload to rolling release
         working-directory: apps/frappe
         env:
