@@ -52,6 +52,7 @@ jobs:
         working-directory: apps/frappe
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
           tar -czhf frappe-$VERSION.tar.gz -C ../../sites/assets/frappe dist
 
       - name: Configure DO Spaces Credentials
@@ -61,7 +62,7 @@ jobs:
           access_key: ${{ secrets.DO_SPACES_KEY }}
           secret_key: ${{ secrets.DO_SPACES_SECRET }}
           space_name: ${{ secrets.DO_SPACES_NAME }}
-          source: apps/frappe/frappe-*.tar.gz
+          source: apps/frappe/frappe-${{ env.version }}.tar.gz
 
       - name: Upload to rolling release
         working-directory: apps/frappe
